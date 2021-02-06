@@ -1,0 +1,109 @@
+<template name='tpl'>
+  <view class="page">
+    <a-header :left-icon="false">学习易</a-header>
+    <scroll-view style="flex: 1;" scroll-y>
+      <view class="user-panel" v-if="userData" @click="logout">
+        <img src="../../images/icon__tab--user-1.png" alt="" class="user-avatar"/>
+        <text class="user-name">{{ userData.name }}</text>
+      </view>
+
+      <view class="user-panel" v-else @click="doLogin">
+        <img src="../../images/icon__tab--user-0.png" alt="" class="user-avatar"/>
+        <text class="user-name">请登录</text>
+      </view>
+
+      <a-cell title="我的预约&线上课订单" value="立即查看"
+      		  link="../order-list/order-list.stml"
+              imgIcon="../../images/icon__user-cell--alarm.png"/>
+
+
+    </scroll-view>
+  </view>
+</template>
+<script>
+import AHeader from "../../components/a-header.stml";
+import ACellGroup from "../../components/a-cell-group.stml";
+import ACell from "../../components/a-cell.stml";
+import {POST} from "../../script/req";
+import {showModal} from "../../components/utils";
+import UserManager from "../../script/UserManager";
+
+
+export default {
+  name: "tpl",
+  components: {ACell, ACellGroup, AHeader},
+  installed() {
+    this.UM = new UserManager();
+    this.data.userData = this.UM.data;
+  },
+  data() {
+    return {
+      userData: false
+    };
+  },
+  methods: {
+    doLogin() {
+      showModal({
+        title: "登录说明", content: '本次登录将使用模拟用户数据',
+        success: res => {
+          POST('i_alls/appLogin', {
+            deviceId: api.deviceId
+          }).then(data => {
+            this.data.userData = this.UM.data = data[0];
+          })
+        }
+      })
+    },
+    logout() {
+      showModal({
+        title: '提示',
+        content: '您真的确定要退出当前账号吗',
+        success: (res) => {
+          if (res.confirm) {
+            this.UM.logout();
+            api.toast({
+              msg: '退出成功'
+            })
+            setTimeout(_ => {
+              this.data.userData = this.UM.data;
+            }, 300);
+          }
+        }
+      })
+    }
+
+
+  }
+};
+</script>
+<style>
+.page {
+  height: 100%;
+  background-color: white;
+}
+
+.user-panel {
+  width: 100%;
+  height: 170px;
+  background-color: #fdf9f5;
+  flex-flow: row nowrap;
+  align-items: center;
+}
+
+.user-avatar {
+  width: 60px;
+  height: 60px;
+  background: #EFEFEF;
+  border-radius: 30px;
+  border: 4px solid #F1C694;
+  margin: 20px;
+}
+
+.user-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: #333333;
+  line-height: 16px;
+}
+
+</style>
