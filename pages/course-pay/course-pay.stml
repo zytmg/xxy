@@ -1,0 +1,149 @@
+<template>
+  <view class="page">
+    <a-header>预约报名</a-header>
+
+    <scroll-view style="flex: 1;" scroll-y>
+      <view class="pay-top">
+        <img :src="cover" class="cover"/>
+        <view class="info">
+          <text class="title">{{ title }}</text>
+          <text class="price"> {{ class_hour }}课时 / {{ price }}元</text>
+        </view>
+      </view>
+
+      <view class="intro">
+        <a-cell title="课程类型" value="线上直播课"/>
+        <a-cell title="开课时间" value="5月30日 09:00"/>
+        <a-cell title="购买须知">
+          <text style="font-size: 14px;color: #666;">本课程由线上直播授课，请在购买课程后下载学习易网校APP，并 使用您登录小程序的手机号进行登录，登录后即可同步您 购买的课程进行上课。
+          </text>
+        </a-cell>
+      </view>
+
+    </scroll-view>
+
+    <view class="pay-btn" @click="placeAnOrder">
+      <text class="pay-btn__text">去支付{{ price }}元</text>
+    </view>
+
+    <safe-area></safe-area>
+
+  </view>
+</template>
+
+<script>
+import AHeader from "../../components/a-header.stml";
+import ACell from "../../components/a-cell.stml";
+import {showModal} from "../../components/utils";
+import {POST} from "../../script/req";
+import UserManager from "../../script/UserManager";
+
+export default {
+  name: "course-pay",
+  components: {ACell, AHeader},
+  installed() {
+    this.userData = new UserManager().data;
+  },
+  data() {
+    const {title, class_hour, price, cover} = api.pageParam;
+    return {title, class_hour, price, cover};
+  }
+  , methods: {
+    placeAnOrder() {
+
+
+      POST('i_alls/placeAnOrder', {
+        userId: this.userData.id,
+        courseId: api.pageParam.id
+      }).then(data => {
+        showModal({
+          title: '订单已经创建',
+          content: '正在模拟支付过程，正式使用可以接入响应支付渠道。请选择确定支付成功，或者取消支付。',
+          success: res => {
+            if (res.confirm) {
+              this.mockPay(data.id);
+            } else {
+              api.toast({
+                msg: '用户已经取消支付'
+              })
+            }
+          }
+        })
+      })
+    },
+    mockPay(orderId) {
+      POST('i_alls/mockPay', {
+        amount: this.data.price, orderId
+      }).then(_ => {
+        api.openWin({
+          name: 'pay-result',
+          url: '../pay-result/pay-result.stml',
+          pageParam: {
+            title: '支付成功',
+            desc: '可在“我的”中查看预约报名记录'
+          }
+        })
+      })
+    }
+  }
+}
+</script>
+
+<style scoped>
+.page {
+  background: #F8F8F8;
+  height: 100%;
+}
+
+.pay-top {
+  padding: 20px 15px;
+  flex-flow: row nowrap;
+  align-items: center;
+  background: #FFF;
+}
+
+.cover {
+  width: 124px;
+  height: 70px;
+}
+
+.info {
+  margin-left: 15px;
+}
+
+.title {
+  color: #333;
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.price {
+  font-size: 16px;
+  font-weight: bold;
+  color: #FA6400;
+  line-height: 16px;
+  font-family: monospace;
+}
+
+.intro {
+  margin-top: 10px;
+  background: #FFF;
+}
+
+.pay-btn {
+  height: 44px;
+  background: #F1C694;
+  border-radius: 4px;
+  margin: 0 15px;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.pay-btn__text {
+  color: #FFF;
+  font-size: 16px;
+  font-weight: bold;
+}
+</style>
