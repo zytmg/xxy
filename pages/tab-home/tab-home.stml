@@ -1,0 +1,195 @@
+<template name='tab-home'>
+  <view class="page">
+    <a-header :left-icon="false">学习易</a-header>
+    <!--    <a-header title="学习易"/>-->
+    <scroll-view class="main" scroll-y>
+      <swiper autoplay circular class="main__swiper" style="margin: 10px 0;"
+              v-if="homeData.banners">
+        <swiper-item v-for="(item,index) in homeData.banners" class="main__swiper--item">
+          <img :src="item.cover" class="main__swiper--img"/>
+        </swiper-item>
+      </swiper>
+
+
+      <scroll-view class="main__menu" scroll-x v-if="homeData.course_category"
+                   :style="'height:'+(api.winWidth/4+20)+'px;'">
+        <view class="main__menu--item" v-for="item in homeData.course_category" @click="goto(item)"
+              :style="'width:'+api.winWidth/4+'px;'">
+          <img :src="item.image" class="main__menu--item-img"/>
+          <text class="main__menu--item-text">{{ item.name }}</text>
+        </view>
+      </scroll-view>
+
+      <a-section title="名师团队" v-if="homeData.teacher_teams" class="main__teachers">
+        <scroll-view class="main__teacher" scroll-x>
+          <view class="main__teacher--item" v-for="item in homeData.teacher_teams" @click="test(item)">
+            <img :src="item.thumb" class="main__teacher--item-img"/>
+            <text class="main__teacher--item-name">{{ item.name }}</text>
+            <text class="main__teacher--item-introduction">{{ item.introduction }}</text>
+          </view>
+        </scroll-view>
+      </a-section>
+
+      <a-section title="关于我们" v-if="homeData.aboutus" class="main__about">
+        <text class="main__about--text">{{ homeData.aboutus[0].value }}</text>
+      </a-section>
+
+
+    </scroll-view>
+
+  </view>
+</template>
+<script>
+import AHeader from "../../components/a-header.stml";
+import {GET} from "../../script/req";
+import ASection from "../../components/a-section.stml";
+import {showModal} from "../../components/utils";
+
+export default {
+  name: "tpl",
+  components: {ASection, AHeader},
+  installed() {
+    // 显式声明状态栏样式 解决部分安卓机型自动生成的灰色半透明背景
+    api.setStatusBarStyle && api.setStatusBarStyle({
+      style: 'dark',//字体样式
+      color: '-'//背景色
+    });
+
+    this.getHomeData();
+  },
+  data() {
+    return {
+      homeData: {}
+    };
+  },
+  computed: {},
+  methods: {
+    getHomeData() {
+      console.log('getHomeData')
+      GET('i_alls/home').then(data => {
+        this.data.homeData = data;
+        api.setPrefs({
+          key: 'course_category', value: data.course_category
+        });
+      })
+    },
+    swiperChange(e) {
+      console.log(JSON.stringify(e.target.dataset.id))
+    },
+    goto(pageParam) {
+      api.openWin({
+        name: 'course-list',
+        url: '../course-list/course-list.stml', pageParam
+      })
+    },
+    test(item) {
+      showModal({
+        title: item.name,
+        content: item.introduction,
+        success(res) {
+          if (res.confirm) {
+            console.log('用户点击确定')
+          } else if (res.cancel) {
+            console.log('用户点击取消')
+          }
+        },
+        complete(res) {
+          console.log(res)
+        }
+      })
+    }
+  }
+};
+</script>
+<style>
+.page {
+  height: 100%;
+  background-color: white;
+}
+
+
+.main {
+  flex: 1;
+}
+
+.main__swiper {
+  height: 200px;
+}
+
+.main__swiper--item {
+  height: 100%;
+}
+
+.main__swiper--img {
+  height: 100%;
+  width: 100%;
+}
+
+.main__menu, .main__teacher {
+  flex-flow: row nowrap;
+  overflow-x: scroll;
+  white-space: nowrap;
+  flex-shrink: 0;
+  overflow-scrolling: touch;
+  margin-bottom: 5px;
+}
+
+.main__menu {
+  box-shadow: 0 2px 8px #DDD;
+}
+
+.main__teacher {
+  padding: 5px;
+  height: 154px;
+}
+
+.main__menu--item {
+  flex-shrink: 0;
+  justify-content: center;
+  align-items: center;
+  display: inline-flex;
+  margin: 10px 0;
+}
+
+.main__menu--item-img {
+  width: 60px;
+  height: 60px;
+}
+
+.main__menu--item-text {
+  color: #333;
+  font-size: 12px;
+}
+
+.main__about--text {
+  color: #666;
+  font-size: 14px;
+  line-height: 24px;
+}
+
+.main__teacher--item {
+  width: 120px;
+  height: 140px;
+  background: #FFFFFF;
+  border: 1px solid #f0f0f0;
+  box-shadow: 1px 1px 6px #e2e0e0;
+  border-radius: 3px;
+  margin: 0 5px;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  display: inline-flex;
+}
+
+.main__teacher--item-img {
+  height: 50px;
+  width: 50px;
+  border-radius: 50%;
+}
+
+.main__teacher--item-name {
+  color: #333;
+  font-size: 14px;
+  margin: 12px 0;
+  font-weight: bold;
+}
