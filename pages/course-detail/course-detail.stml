@@ -1,0 +1,103 @@
+<template name="course-detail">
+
+  <view class="page">
+    <a-header title="课程详情"/>
+
+    <scroll-view v-if="courseData" style="flex: 1;" scroll-y bounces="false">
+
+      <b-course :courseData="courseData"/>
+
+
+      <a-section title="课程详情" class="cd--card">
+        <rich-text nodes={courseData.body}></rich-text>
+      </a-section>
+
+      <view class="cd__bottom--btn" @click="nextStep">
+        <text class="cd__bottom--text">{courseData.type===2?'立即报名':'立即预约'}</text>
+      </view>
+      <safe-area></safe-area>
+    </scroll-view>
+
+  </view>
+</template>
+
+<script>
+import AHeader from "../../components/a-header.stml";
+import {GET} from "../../script/req";
+import ASection from "../../components/a-section.stml";
+import BCourse from "../../components/b-course.stml";
+import UserManager from "../../script/UserManager";
+
+export default {
+  name: "course-detail",
+  components: {BCourse, ASection, AHeader},
+  data() {
+    return {
+      courseData: false
+    }
+  },
+  installed() {
+    this.getCourseDetail();
+    this.UM = new UserManager();
+  },
+  methods: {
+    getCourseDetail() {
+      if (!api.pageParam.id) {
+        api.pageParam.id = '38fee560-cd78-11ea-be50-d959bf2e4116';
+      }
+
+      GET('i_alls/getCourseDetail?courseId=' + api.pageParam.id).then(data => {
+        this.data.courseData = data;
+      })
+    }
+    , nextStep() {
+      if (this.UM.data) {
+        if (this.data.courseData.type === 2) {
+          api.openWin({
+            name: 'course-pay',
+            url: '../course-pay/course-pay.stml',
+            pageParam: api.pageParam
+          })
+        } else {
+          api.openWin({
+            name: 'course-preorder',
+            url: '../course-preorder/course-preorder.stml',
+            pageParam: api.pageParam
+          })
+        }
+      } else {
+        api.toast({
+          msg: '请登录后再进行操作'
+        })
+      }
+    }
+  }
+}
+</script>
+
+<style scoped>
+.page {
+  height: 100%;
+  background: #F8F8F8;
+}
+
+.cd--card {
+  background: #fff;
+  margin-top: 10px;
+  padding: 15px;
+}
+
+.cd__bottom--btn {
+  height: 50px;
+  width: 100%;
+  background: #F1C694;
+  justify-content: center;
+  align-items: center;
+}
+
+.cd__bottom--text {
+  color: #FFF;
+  font-size: 16px;
+  font-weight: bold;
+}
+</style>
