@@ -1,0 +1,119 @@
+<template>
+  <view class="page">
+    <a-header>我的订单</a-header>
+    {this.data.list.length?
+    <scroll-view style="flex: 1;" scroll-y>
+      <view class="ol-item" v-for="order in list" @click="intoDetail(order)">
+        <view class="ol-item__header">
+          <text class="ol-item__header--title">{{ order.rel_order_course_id.title }}</text>
+          <text class="ol-item__header--status" v-if="order.status===1" style="color:#FA6400;"> • 待支付</text>
+          <text class="ol-item__header--status" v-else-if="order.status===2" style="color:#00CB97;"> • 已完成</text>
+        </view>
+        <view class="ol-item__content">
+          <text class="ol-item__content--li ol-item__content--order">订单号：{{ order.order_number }}</text>
+          <text class="ol-item__content--li">支付金额：{{ order.amount }}元</text>
+        </view>
+      </view>
+    </scroll-view>:
+    <b-notice title="暂无数据哦" icon="../../images/icon__notice--empty.png"/>
+    }
+  </view>
+</template>
+
+<script>
+import AHeader from "../../components/a-header.stml";
+import ACard from "../../components/a-card.stml";
+import UserManager from "../../script/UserManager";
+import {showModal} from "../../components/utils";
+import {GET} from "../../script/req";
+import BNotice from "../../components/b-notice.stml";
+
+export default {
+  name: "order-list",
+  components: {BNotice, ACard, AHeader},
+  data() {
+    return {
+      list: []
+    }
+  },
+  onshow() {
+    this.init();
+  },
+  methods: {
+    init() {
+      this.um = new UserManager();
+      if (this.um.data) {
+        this.getList();
+      } else {
+        showModal({
+              title: "需要登录",
+              content: "查看您的订单需要先登录账号",
+              showCancel: false,
+              success: res => {
+                if (res.confirm) {
+                  api.closeWin();
+                }
+              }
+            }
+        )
+      }
+    },
+    getList() {
+      GET('i_alls/mineOrders?userId=' + (new UserManager()).data.id).then(data => {
+        this.data.list = data;
+      })
+    },
+    intoDetail(pageParam) {
+      api.openWin({
+        name: 'order-detail',
+        url: '../order-detail/order-detail.stml',
+        pageParam
+      })
+    }
+  }
+}
+</script>
+
+<style scoped>
+.page {
+  height: 100%;
+  background: #F8F8F8;
+}
+
+.ol-item {
+  background: #FFFFFF;
+  box-shadow: 0 2px 6px #e2e0e0;
+  border-radius: 4px;
+  margin: 10px;
+}
+
+.ol-item__header {
+  flex-flow: row nowrap;
+  padding: 20px 10px;
+  border-bottom: 1px solid #F1F1F1;
+}
+
+.ol-item__header--title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333333;
+  flex: 1;
+}
+
+.ol-item__header--status {
+  font-size: 14px;
+}
+
+.ol-item__content {
+  padding: 10px;
+}
+
+.ol-item__content--order {
+  margin-bottom: 10px;
+}
+
+.ol-item__content--li {
+  color: #999;
+  font-size: 14px;
+}
+</style>
