@@ -1,0 +1,121 @@
+<template>
+  <view class="page">
+    <a-header>我的预定</a-header>
+    {this.data.list.length?
+    <scroll-view style="flex: 1;" scroll-y>
+      <view class="pl-item" v-for="pre in list" @click="intoDetail(pre)">
+        <view style="flex: 1;">
+          <view class="pl-item__header">
+            <text class="pl-item__header--title">
+              {{ pre.rel_course_id.title }}
+            </text>
+            <text class="pl-item__header--tag" v-if="pre.status===1" style="background: #F1C694;">预约中</text>
+            <text class="pl-item__header--tag" v-else style="background: #CCC;">已取消</text>
+          </view>
+          <text class="pl-item__content--time">预约时间：{{ timer(pre.create_time) }}</text>
+        </view>
+        <img class="pl-item__content--arrow" src="../../images/icon__preorder-list--item-arrow.png" alt="">
+      </view>
+    </scroll-view>
+    :
+    <b-notice title="暂无数据哦" icon="../../images/icon__notice--empty.png"/>
+    }
+  </view>
+</template>
+
+<script>
+import AHeader from "../../components/a-header.stml";
+import {GET} from "../../script/req";
+import UserManager from "../../script/UserManager";
+import {showModal, timer} from "../../components/utils";
+import BNotice from "../../components/b-notice.stml";
+
+export default {
+  name: "preorder-list",
+  components: {BNotice, AHeader},
+  data() {
+    return {
+      list: []
+    }
+  }, onshow() {
+    this.init();
+  },
+  methods: {
+    init() {
+      this.um = new UserManager();
+      if (this.um.data) {
+        this.getList();
+      } else {
+        showModal({
+              title: "需要登录",
+              content: "查看您的预约订单需要先登录账号",
+              showCancel: false,
+              success: res => {
+                if (res.confirm) {
+                  api.closeWin();
+                }
+              }
+            }
+        )
+      }
+    },
+    getList() {
+      GET('i_alls/mineAppointment?userId=' + (new UserManager()).data.id).then(data => {
+        this.data.list = data;
+      })
+    }, intoDetail(pageParam) {
+      api.openWin({
+        name: 'preorder-detail',
+        url: '../preorder-detail/preorder-detail.stml',
+        pageParam
+      })
+    }
+  }
+}
+</script>
+
+<style scoped>
+.page {
+  height: 100%;
+  background-color: #F8F8F8;
+}
+
+.pl-item {
+  flex-flow: row nowrap;
+  align-items: center;
+  background: #FFFFFF;
+  box-shadow: 0 2px 6px #DDD;
+  border-radius: 4px;
+  padding: 20px 10px;
+  margin: 10px 15px 0;
+}
+
+.pl-item__header {
+  flex-flow: row nowrap;
+}
+
+.pl-item__header--title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333333;
+}
+
+.pl-item__header--tag {
+  border-radius: 2px;
+  font-size: 12px;
+  padding: 3px 6px;
+  color: #fff;
+  margin-left: 10px;
+}
+
+.pl-item__content--time {
+  margin-top: 14px;
+  color: #999;
+  font-size: 14px;
+}
+
+.pl-item__content--arrow {
+  width: 18px;
+  height: 18px;
+}
+</style>
