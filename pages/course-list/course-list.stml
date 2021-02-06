@@ -1,0 +1,17 @@
+<template name='course-list'>
+  <c-course-list/>
+</template>
+<script>
+import CCourseList from "../../components/c-course-list.stml";
+
+export default {
+  name: "course-list",
+  components: {CCourseList}
+};
+</script>
+<style>
+.page {
+  height: 100%;
+  background-color: #F8F8F8;
+}
+</style>
